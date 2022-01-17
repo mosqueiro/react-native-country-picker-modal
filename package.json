@@ -1,12 +1,12 @@
 {
-  "name": "react-native-country-picker-modal",
-  "version": "2.0.0",
+  "name": "@zcorefinance/react-native-country-picker-modal",
+  "version": "3.0.0",
   "description": "react-native country picker",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xcarpentier/react-native-country-picker-modal.git"
+    "url": "git+https://github.com/mosqueiro/react-native-country-picker-modal.git"
   },
   "scripts": {
     "start": "yarn config:dev && expo start",
@@ -41,9 +41,9 @@
   "author": "Xavier Carpentier <xcapetir@gmail.com> (https://xaviercarpentier.com/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xcarpentier/react-native-country-picker-modal/issues"
+    "url": "https://github.com/mosqueiro/react-native-country-picker-modal/issues"
   },
-  "homepage": "http://xcarpentier.github.io/react-native-country-picker-modal",
+  "homepage": "https://github.com/mosqueiro/react-native-country-picker-modal.git",
   "dependencies": {
     "@callstack/react-theme-provider": "3.0.3",
     "fuse.js": "3.4.5",

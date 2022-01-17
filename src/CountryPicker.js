@@ -1,64 +1,79 @@
 // @flow
 /* eslint import/newline-after-import: 0 */
 
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import SafeAreaView from 'react-native-safe-area-view'
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import SafeAreaView from 'react-native-safe-area-view';
 
 import {
   StyleSheet,
   View,
   Image,
   TouchableOpacity,
-  Modal,
+  // Modal,
   Text,
-  TextInput,
+  // TextInput,
   FlatList,
   ScrollView,
-  Platform
-} from 'react-native'
+  Platform,
+} from 'react-native';
+// import {
+//   Textfield,
+//   // RadioButton,
+//   // RadioButtonGroup,
+// } from 'react-native-material-kit';
+import MaskInput from 'react-native-mask-input';
+// import {
+//   Image,
+// } from 'react-native-ui-lib';
 
-import Fuse from 'fuse.js'
+import Fuse from 'fuse.js';
 
-import cca2List from '../data/cca2.json'
-import { getHeightPercent } from './ratio'
-import CloseButton from './CloseButton'
-import countryPickerStyles from './CountryPicker.style'
-import KeyboardAvoidingView from './KeyboardAvoidingView'
+// import placeholder from '../images/placeholder.png';
 
-let countries = null
-let Emoji = null
-let styles = {}
+import flags from './countryFlags';
 
-let isEmojiable = Platform.OS === 'ios'
+import cca2List from '../data/cca2.json';
+import {getHeightPercent} from './ratio';
+import CloseButton from './CloseButton';
+import countryPickerStyles from './CountryPicker.style';
+import KeyboardAvoidingView from './KeyboardAvoidingView';
+
+let countries = null;
+let Emoji = null;
+let styles = {};
+
+// let isEmojiable = Platform.OS === 'ios';
+let isEmojiable = false;
 
 const FLAG_TYPES = {
   flat: 'flat',
-  emoji: 'emoji'
-}
+  emoji: 'emoji',
+};
 
 const setCountries = flagType => {
   if (typeof flagType !== 'undefined') {
-    isEmojiable = flagType === FLAG_TYPES.emoji
+    isEmojiable = flagType === FLAG_TYPES.emoji;
   }
 
   if (isEmojiable) {
-    countries = require('../data/countries-emoji.json')
-    Emoji = require('./emoji').default
+    countries = require('../data/countries-emoji.json');
+    Emoji = require('./emoji').default;
   } else {
-    countries = require('../data/countries.json')
-    Emoji = <View />
+    countries = require('../data/countries.json');
+    Emoji = <View />;
   }
-}
+};
 
-setCountries()
+setCountries();
 
 export const getAllCountries = () =>
-  cca2List.map(cca2 => ({ ...countries[cca2], cca2 }))
+  cca2List.map(cca2 => ({...countries[cca2], cca2}));
 
 export default class CountryPicker extends Component {
   static propTypes = {
-    cca2: PropTypes.string.isRequired,
+    // cca2: PropTypes.string.isRequired,
+    cca2: PropTypes.string,
     translation: PropTypes.string,
     onChange: PropTypes.func.isRequired,
     onClose: PropTypes.func,
@@ -82,8 +97,8 @@ export default class CountryPicker extends Component {
     renderFilter: PropTypes.func,
     showCallingCode: PropTypes.bool,
     filterOptions: PropTypes.object,
-    showCountryNameWithFlag: PropTypes.bool
-  }
+    showCountryNameWithFlag: PropTypes.bool,
+  };
 
   static defaultProps = {
     translation: 'eng',
@@ -93,26 +108,35 @@ export default class CountryPicker extends Component {
     filterPlaceholder: 'Filter',
     autoFocusFilter: true,
     transparent: false,
-    animationType: 'none'
-  }
+    animationType: 'none',
+  };
 
   static renderEmojiFlag(cca2, emojiStyle) {
     return (
-      <Text style={[countryPickerStyles.emojiFlag, emojiStyle]} allowFontScaling={false}>
+      <Text
+        style={[countryPickerStyles.emojiFlag, emojiStyle]}
+        allowFontScaling={false}>
         {cca2 !== '' && countries[cca2.toUpperCase()] ? (
           <Emoji name={countries[cca2.toUpperCase()].flag} />
         ) : null}
       </Text>
-    )
+    );
   }
 
   static renderImageFlag(cca2, imageStyle) {
+    // const image = require(`../images/${cca2}.png`);
+
     return cca2 !== '' ? (
       <Image
         style={[countryPickerStyles.imgStyle, imageStyle]}
-        source={{ uri: countries[cca2].flag }}
+        // defaultSource={placeholder}
+        // source={image}
+        // source={{uri: `https://raw.githubusercontent.com/alexsilvadev/country-flags/master/png/${cca2}.png`, cache: 'only-if-cached'}}
+        source={flags[cca2]}
+        // source={{uri: flags[cca2]}}
+        // source={{uri: countries[cca2].flag}}
       />
-    ) : null
+    ) : null;
   }
 
   static renderFlag(cca2, itemStyle, emojiStyle, imageStyle) {
@@ -122,137 +146,146 @@ export default class CountryPicker extends Component {
           ? CountryPicker.renderEmojiFlag(cca2, emojiStyle)
           : CountryPicker.renderImageFlag(cca2, imageStyle)}
       </View>
-    )
+    );
   }
 
-  static renderFlagWithName(cca2,countryName, itemStyle, emojiStyle, imageStyle) {
+  static renderFlagWithName(
+    cca2,
+    countryName,
+    itemStyle,
+    emojiStyle,
+    imageStyle,
+  ) {
     return (
-      <View style={{flexDirection:'row', flexWrap:'wrap',alignItems: "center",}}>
+      <View
+        style={{flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center'}}>
         <View style={[countryPickerStyles.itemCountryFlag, itemStyle]}>
           {isEmojiable
             ? CountryPicker.renderEmojiFlag(cca2, emojiStyle)
             : CountryPicker.renderImageFlag(cca2, imageStyle)}
-
         </View>
-        <Text style={{marginLeft:15,fontSize:16}}>{countryName}</Text>
+        <Text style={{marginLeft: 15, fontSize: 16}}>{countryName}</Text>
       </View>
-    )
+    );
   }
 
   constructor(props) {
-    super(props)
-    this.openModal = this.openModal.bind(this)
+    super(props);
+    this.openModal = this.openModal.bind(this);
 
-    setCountries(props.flagType)
-    let countryList = [...props.countryList]
-    const excludeCountries = [...props.excludeCountries]
+    setCountries(props.flagType);
+    let countryList = [...props.countryList];
+    const excludeCountries = [...props.excludeCountries];
 
     excludeCountries.forEach(excludeCountry => {
-      const index = countryList.indexOf(excludeCountry)
+      const index = countryList.indexOf(excludeCountry);
 
       if (index !== -1) {
-        countryList.splice(index, 1)
+        countryList.splice(index, 1);
       }
-    })
+    });
 
     // Sort country list
     countryList = countryList
       .map(c => [c, this.getCountryName(countries[c])])
       .sort((a, b) => {
-        if (a[1] < b[1]) return -1
-        if (a[1] > b[1]) return 1
-        return 0
+        if (a[1] < b[1]) return -1;
+        if (a[1] > b[1]) return 1;
+        return 0;
       })
-      .map(c => c[0])
+      .map(c => c[0]);
 
     this.state = {
       modalVisible: false,
       cca2List: countryList,
-      flatListMap: countryList.map(n => ({ key: n })),
+      flatListMap: countryList.map(n => ({key: n})),
       dataSource: countryList,
       filter: '',
-      letters: this.getLetters(countryList)
-    }
+      letters: this.getLetters(countryList),
+    };
 
     if (this.props.styles) {
       Object.keys(countryPickerStyles).forEach(key => {
         styles[key] = StyleSheet.flatten([
           countryPickerStyles[key],
-          this.props.styles[key]
-        ])
-      })
-      styles = StyleSheet.create(styles)
+          this.props.styles[key],
+        ]);
+      });
+      styles = StyleSheet.create(styles);
     } else {
-      styles = countryPickerStyles
+      styles = countryPickerStyles;
     }
 
-    const options = Object.assign({
-      shouldSort: true,
-      threshold: 0.6,
-      location: 0,
-      distance: 100,
-      maxPatternLength: 32,
-      minMatchCharLength: 1,
-      keys: ['name'],
-      id: 'id'
-    }, this.props.filterOptions);
+    const options = Object.assign(
+      {
+        shouldSort: true,
+        threshold: 0.6,
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchCharLength: 1,
+        keys: ['name'],
+        id: 'id',
+      },
+      this.props.filterOptions,
+    );
     this.fuse = new Fuse(
       countryList.reduce(
         (acc, item) => [
           ...acc,
-          { id: item, name: this.getCountryName(countries[item]) }
+          {id: item, name: this.getCountryName(countries[item])},
         ],
-        []
+        [],
       ),
-      options
-    )
+      options,
+    );
   }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.countryList !== this.props.countryList) {
       this.setState({
         cca2List: nextProps.countryList,
-        dataSource: nextProps.countryList
-      })
+        dataSource: nextProps.countryList,
+      });
     }
   }
 
   onSelectCountry(cca2) {
     this.setState({
-      modalVisible: false,
+      // modalVisible: false,
       filter: '',
-      dataSource: this.state.cca2List
-    })
+      dataSource: this.state.cca2List,
+    });
 
     this.props.onChange({
       cca2,
       ...countries[cca2],
       flag: undefined,
-      name: this.getCountryName(countries[cca2])
-    })
+      name: this.getCountryName(countries[cca2]),
+    });
   }
 
   onClose = () => {
     this.setState({
       modalVisible: false,
       filter: '',
-      dataSource: this.state.cca2List
-    })
+      dataSource: this.state.cca2List,
+    });
     if (this.props.onClose) {
-      this.props.onClose()
+      this.props.onClose();
     }
-  }
+  };
 
   getCountryName(country, optionalTranslation) {
     if (!country) {
-      return ''
+      return '';
     }
-    const translation = optionalTranslation || this.props.translation || 'eng'
-    return country.name[translation] || country.name.common
+    const translation = optionalTranslation || this.props.translation || 'eng';
+    return country.name[translation] || country.name.common;
   }
 
   setVisibleListHeight(offset) {
-    this.visibleListHeight = getHeightPercent(100) - offset
+    this.visibleListHeight = getHeightPercent(100) - offset;
   }
 
   getLetters(list) {
@@ -262,63 +295,62 @@ export default class CountryPicker extends Component {
           ...acc,
           [this.getCountryName(countries[val])
             .slice(0, 1)
-            .toUpperCase()]: ''
+            .toUpperCase()]: '',
         }),
-        {}
-      )
-    ).sort()
+        {},
+      ),
+    ).sort();
   }
 
-  openModal = this.openModal.bind(this)
+  openModal = this.openModal.bind(this);
 
   // dimensions of country list and window
-  itemHeight = getHeightPercent(7)
-  listHeight = countries.length * this.itemHeight
+  itemHeight = getHeightPercent(7);
+  listHeight = countries.length * this.itemHeight;
 
   openModal() {
-    this.setState({ modalVisible: true })
+    this.setState({modalVisible: true});
   }
 
   scrollTo(letter) {
     // find position of first country that starts with letter
     const index = this.state.cca2List
       .map(country => this.getCountryName(countries[country])[0])
-      .indexOf(letter)
+      .indexOf(letter);
     if (index === -1) {
-      return
+      return;
     }
-    let position = index * this.itemHeight
+    let position = index * this.itemHeight;
 
     // do not scroll past the end of the list
     if (position + this.visibleListHeight > this.listHeight) {
-      position = this.listHeight - this.visibleListHeight
+      position = this.listHeight - this.visibleListHeight;
     }
 
-    this._flatList.scrollToIndex({ index });
+    this._flatList.scrollToIndex({index});
   }
 
   handleFilterChange = value => {
     const filteredCountries =
-      value === '' ? this.state.cca2List : this.fuse.search(value)
-    this._flatList.scrollToOffset({ offset: 0 });
+      value === '' ? this.state.cca2List : this.fuse.search(value);
+    this._flatList.scrollToOffset({offset: 0});
 
     this.setState({
       filter: value,
       dataSource: filteredCountries,
-      flatListMap: filteredCountries.map(n => ({ key: n }))
-    })
-  }
+      flatListMap: filteredCountries.map(n => ({key: n})),
+    });
+  };
 
   renderCountry(country, index) {
     return (
       <TouchableOpacity
         key={index}
         onPress={() => this.onSelectCountry(country)}
-        activeOpacity={0.99}
-      >
+        activeOpacity={0.5}>
         {this.renderCountryDetail(country)}
       </TouchableOpacity>
-    )
+    );
   }
 
   renderLetters(letter, index) {
@@ -326,19 +358,19 @@ export default class CountryPicker extends Component {
       <TouchableOpacity
         key={index}
         onPress={() => this.scrollTo(letter)}
-        activeOpacity={0.6}
-      >
+        // onPress={() => {}}
+        activeOpacity={0.6}>
         <View style={styles.letter}>
           <Text style={styles.letterText} allowFontScaling={false}>
             {letter}
           </Text>
         </View>
       </TouchableOpacity>
-    )
+    );
   }
 
   renderCountryDetail(cca2) {
-    const country = countries[cca2]
+    const country = countries[cca2];
     return (
       <View style={styles.itemCountry}>
         {!this.props.hideCountryFlag && CountryPicker.renderFlag(cca2)}
@@ -346,12 +378,12 @@ export default class CountryPicker extends Component {
           <Text style={styles.countryName} allowFontScaling>
             {this.getCountryName(country)}
           </Text>
-          {this.props.showCallingCode &&
-          country.callingCode &&
-          <Text style={styles.countryCode}>{`+${country.callingCode}`}</Text>}
+          {this.props.showCallingCode && country.callingCode && (
+            <Text style={styles.countryCode}>{`+${country.callingCode}`}</Text>
+          )}
         </View>
       </View>
-    )
+    );
   }
 
   renderFilter = () => {
@@ -359,32 +391,92 @@ export default class CountryPicker extends Component {
       renderFilter,
       autoFocusFilter,
       filterPlaceholder,
-      filterPlaceholderTextColor
-    } = this.props
+      filterPlaceholderTextColor,
+    } = this.props;
 
-    const value = this.state.filter
-    const onChange = this.handleFilterChange
-    const onClose = this.onClose
+    const value = this.state.filter;
+    const onChange = this.handleFilterChange;
+    const onClose = this.onClose;
 
     return renderFilter ? (
-      renderFilter({ value, onChange, onClose })
+      renderFilter({value, onChange, onClose})
     ) : (
-      <TextInput
+      <MaskInput
+        placeholder={filterPlaceholder}
+        // style={{
+        //   marginBottom: 20,
+        // }}
+        style={[styles.input, styles.inputOnly]}
+        // textInputStyle={[
+        //   styles.inputText,
+        //   // !this.props.closeable && styles.inputOnly,
+        // ]}
         autoFocus={autoFocusFilter}
         autoCorrect={false}
-        placeholder={filterPlaceholder}
-        placeholderTextColor={filterPlaceholderTextColor}
-        style={[styles.input, !this.props.closeable && styles.inputOnly]}
+        // tint={'#005F53'}
+        // highlightColor={'#005F53'}
+        // underlineSize={0}
+        // underlineEnabled={true}
+        // floatingLabelEnabled={false}
+        // returnKeyLabel={'next'}
+        // keyboardType={'email-address'}
         onChangeText={onChange}
         value={value}
       />
-    )
-  }
+      // <TextInput
+      //   autoFocus={autoFocusFilter}
+      //   autoCorrect={false}
+      //   placeholder={filterPlaceholder}
+      //   placeholderTextColor={filterPlaceholderTextColor}
+      //   style={[styles.input, !this.props.closeable && styles.inputOnly]}
+      //   onChangeText={onChange}
+      //   value={value}
+      // />
+    );
+  };
 
   render() {
     return (
       <View style={styles.container}>
-        <TouchableOpacity
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.header}>
+            <Text
+              style={{fontSize: 14, fontWeight: 'bold', textAlign: 'center'}}>
+              {this.props.question}
+            </Text>
+            {this.props.closeable && (
+              <CloseButton
+                image={this.props.closeButtonImage}
+                styles={[styles.closeButton, styles.closeButtonImage]}
+                onPress={() => this.onClose()}
+              />
+            )}
+            {this.props.filterable && this.renderFilter()}
+          </View>
+          <KeyboardAvoidingView behavior="padding">
+            <View style={styles.contentContainer}>
+              <FlatList
+                data={this.state.flatListMap}
+                ref={flatList => (this._flatList = flatList)}
+                initialNumToRender={30}
+                renderItem={country => this.renderCountry(country.item.key)}
+                keyExtractor={item => item.key}
+              />
+              {/* {!this.props.hideAlphabetFilter && (
+                <ScrollView
+                  contentContainerStyle={styles.letters}
+                  keyboardShouldPersistTaps="always"
+                >
+                  {this.state.filter === '' &&
+                    this.state.letters.map((letter, index) =>
+                      this.renderLetters(letter, index)
+                    )}
+                </ScrollView>
+              )} */}
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+        {/* <TouchableOpacity
           disabled={this.props.disabled}
           onPress={() => this.setState({ modalVisible: true })}
           activeOpacity={0.7}
@@ -447,8 +539,8 @@ export default class CountryPicker extends Component {
               </View>
             </KeyboardAvoidingView>
           </SafeAreaView>
-        </Modal>
+        </Modal> */}
       </View>
-    )
+    );
   }
 }
